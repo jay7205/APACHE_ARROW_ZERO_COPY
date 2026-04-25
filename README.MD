@@ -218,7 +218,7 @@ identifying limitations and tradeoffs
 
 The results highlight the importance of memory design in modern data systems.
 
-##Author
+## Author
 
 Jay Patel — 202518025
 Saachi Garg — 202518007
