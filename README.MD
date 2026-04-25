@@ -163,6 +163,12 @@ Location:
 ├── DESIGN_DECISION/
 │   └── decision.md
 │
+├── DIAGRAMS/
+│   ├── execution_flow.png
+│   ├── generate diagrams.py
+│   ├── memory_layout.png
+│   └── zero_copy_vs_copy.png
+│
 ├── EXPERIMENTS/
 │   ├── exp1_zero_copy_vs_copy.py
 │   ├── exp2_buffer_memory_check.py
@@ -171,27 +177,26 @@ Location:
 │   ├── exp5_scale_test.py
 │   └── exp6_break_zero_copy.py
 │
+├── MODIFIED_ARROW/
+│
+├── PRESENTATION/
+│
 ├── REPORT/
-│   ├── execution_understanding.md
 │   ├── concept_mapping.md
+│   ├── execution_understanding.md
 │   └── failure_analysis.md
 │
 ├── RESULT/
-│   ├── observations.md
-│   ├── zero_copy_vs_copy_plot.png
-│   ├── scaling_plot.png
+│   ├── break_zero_copy_plot.png
+│   ├── genarate_plot_experiments.py
 │   ├── memory_pool_plot.png
 │   ├── null_bitmap_plot.png
-│   └── break_zero_copy_plot.png
-│
-├── DIAGRAMS/
-│   ├── execution_flow.png
-│   ├── memory_layout.png
-│   └── zero_copy_vs_copy.png
+│   ├── observations.md
+│   ├── scaling_plot.png
+│   └── zero_copy_vs_copy_plot.png
 │
 └── README.md
-
-```text
+```
 
 ## Technologies Used
 Python (PyArrow, NumPy)
