@@ -55,9 +55,9 @@ Analyzed key architectural decisions:
 4. Memory pool allocation  
 
 Each decision was evaluated based on:
-- Code location
-- Purpose
-- Tradeoffs
+- Code location  
+- Purpose  
+- Tradeoffs  
 
 ---
 
@@ -116,30 +116,30 @@ Analyzed system limitations:
 
 ### Real-World Behavior
 - Performance influenced by:
-  - CPU caching
-  - memory reuse
-  - runtime optimizations
-- Results are not always strictly linear
+  - CPU caching  
+  - memory reuse  
+  - runtime optimizations  
+- Results are not always strictly linear  
 
 ---
 
 ## Experimental Results
 
 ### Zero-Copy vs Copy
-- Zero-copy time remains constant
-- Copy time increases significantly with data size
+- Zero-copy time remains constant  
+- Copy time increases significantly with data size  
 
 ### Memory Pool
-- Memory usage increases with allocation
-- Memory is reused after deletion
+- Memory usage increases with allocation  
+- Memory is reused after deletion  
 
 ### Breaking Zero-Copy
-- Slice → zero-copy
-- Python list → copy
-- NumPy → conditional behavior
+- Slice → zero-copy  
+- Python list → copy  
+- NumPy → conditional behavior  
 
 ### Scaling
-- Performance trends exist but are influenced by system-level factors
+- Performance trends exist but are influenced by system-level factors  
 
 ---
 
@@ -151,75 +151,72 @@ The following diagrams were generated programmatically:
 - Memory Layout — ArrayData and buffers  
 - Zero-Copy vs Copy — memory behavior  
 
-Location:
-DIAGRAMS/
-
+Location:  
+`DIAGRAMS/`
 
 ---
 
 ## Project Structure
 
+```text
 .
 ├── DESIGN_DECISION/
-│ └── decision.md
+│   └── decision.md
 │
 ├── EXPERIMENTS/
-│ ├── exp1_zero_copy_vs_copy.py
-│ ├── exp2_buffer_memory_check.py
-│ ├── exp3_memory_pool.py
-│ ├── exp4_null_bitmap.py
-│ ├── exp5_scale_test.py
-│ └── exp6_break_zero_copy.py
+│   ├── exp1_zero_copy_vs_copy.py
+│   ├── exp2_buffer_memory_check.py
+│   ├── exp3_memory_pool.py
+│   ├── exp4_null_bitmap.py
+│   ├── exp5_scale_test.py
+│   └── exp6_break_zero_copy.py
 │
 ├── REPORT/
-│ ├── execution_understanding.md
-│ ├── concept_mapping.md
-│ └── failure_analysis.md
+│   ├── execution_understanding.md
+│   ├── concept_mapping.md
+│   └── failure_analysis.md
 │
 ├── RESULT/
-│ ├── observations.md
-│ ├── plots (performance graphs)
+│   ├── observations.md
+│   ├── zero_copy_vs_copy_plot.png
+│   ├── scaling_plot.png
+│   ├── memory_pool_plot.png
+│   ├── null_bitmap_plot.png
+│   └── break_zero_copy_plot.png
 │
 ├── DIAGRAMS/
-│ ├── execution_flow.png
-│ ├── memory_layout.png
-│ └── zero_copy_vs_copy.png
+│   ├── execution_flow.png
+│   ├── memory_layout.png
+│   └── zero_copy_vs_copy.png
 │
 └── README.md
 
-
----
+```text
 
 ## Technologies Used
-
-- Python (PyArrow, NumPy)
-- C++ (code analysis)
-- Matplotlib (visualization)
-- Apache Arrow source code
-
----
-
-## Key Insight
+Python (PyArrow, NumPy)
+C++ (code analysis)
+Matplotlib (visualization)
+Apache Arrow source code
+Key Insight
 
 Apache Arrow achieves high performance not by faster computation, but by minimizing data movement in memory.
-
----
 
 ## Conclusion
 
 This project demonstrates system-level understanding of Apache Arrow by:
 
-- tracing execution paths  
-- analyzing internal data structures  
-- validating behavior through experiments  
-- identifying limitations and tradeoffs  
+tracing execution paths
+analyzing internal data structures
+validating behavior through experiments
+identifying limitations and tradeoffs
 
 The results highlight the importance of memory design in modern data systems.
 
----
+##Author
 
-## Author
-JAY PATEL 202518025
-SAACHI GARG 202518007
+Jay Patel — 202518025
+Saachi Garg — 202518007
 
-Student Project — Big Data Analysis
+Student Project
+M.Sc. Data Science — Big Data Analysis
