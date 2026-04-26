@@ -10,6 +10,10 @@ This section maps Apache Arrow’s design and implementation to core data system
 
 Columnar storage organizes data by columns instead of rows. This improves performance for analytical workloads where operations are performed on entire columns.
 
+![Memory Layout](../DIAGRAMS/memory_layout.png)
+
+**Graph Interpretation:** This layout clearly compares traditional row-based object storage against Arrow's contiguous columnar buffers, visually explaining why columnar cache locality is superior.
+
 ---
 
 ### In Apache Arrow
@@ -134,6 +138,10 @@ High-performance systems use custom memory allocators to reduce overhead.
 ### Concept
 
 Zero-copy systems avoid data duplication by sharing memory between components.
+
+![Conceptual Zero Copy](../DIAGRAMS/zero_copy_vs_copy.png)
+
+**Graph Interpretation:** This traces how two entirely separate Array objects can execute rapid operations by pointing to the exact same physical raw byte buffer.
 
 ---
 

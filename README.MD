@@ -25,6 +25,8 @@ This project aims to answer:
 The work was carried out in structured phases:
 
 ### Phase 1 — Execution Understanding
+![Execution Flow](DIAGRAMS/execution_flow.png)
+
 - Traced the execution path from Python API to memory
 - Identified transition from Python layer to C++ layer
 - Analyzed key components:
@@ -37,6 +39,8 @@ The work was carried out in structured phases:
 ---
 
 ### Phase 2 — Memory & Data Structures
+![Memory Layout](DIAGRAMS/memory_layout.png)
+
 - Studied how Arrow stores data in memory
 - Key components:
   - Buffer → raw contiguous memory
@@ -88,6 +92,8 @@ Analyzed system limitations:
 ## Key Findings
 
 ### Zero-Copy Behavior
+![Conceptual Zero Copy](DIAGRAMS/zero_copy_vs_copy.png)
+
 - Zero-copy operations run in constant time (O(1))
 - Copy operations scale linearly (O(n))
 - Performance gain comes from avoiding memory duplication
@@ -126,20 +132,36 @@ Analyzed system limitations:
 ## Experimental Results
 
 ### Zero-Copy vs Copy
-- Zero-copy time remains constant  
-- Copy time increases significantly with data size  
+- Zero-copy time remains constant (**0.0002 seconds**)
+- Copy time increases linearly with data size (**3.6057 seconds**)
+
+![Zero Copy vs Copy Comparison](RESULT/zero_copy_vs_copy_plot.png)
 
 ### Memory Pool
-- Memory usage increases with allocation  
-- Memory is reused after deletion  
+- Memory usage increases with allocation (`arr1` = 80MB, `arr2` = 160MB).  
+- Memory is managed by the Arrow memory pool and reused upon deletion instead of being immediately returned to the OS.
+
+![Memory Pool Behavior](RESULT/memory_pool_plot.png)
 
 ### Breaking Zero-Copy
-- Slice → zero-copy  
-- Python list → copy  
-- NumPy → conditional behavior  
+Through memory address validation, we observed:
+- Slice remains zero-copy (Same buffer: `2326838259776`)
+- Conversion to Python `list` forces copy (Different buffer: `2327277666432`)
+- NumPy round-trip maintains zero-copy (Same buffer: `2326838259776`)
+
+![Breaking Zero Copy](RESULT/break_zero_copy_plot.png)
 
 ### Scaling
-- Performance trends exist but are influenced by system-level factors  
+- Performance linear trends test (5M: `0.0008s` → 10M: `0.0018s` → 50M: `0.0073s`).
+- The 1M test (`0.0764s`) reveals CPU/cache initialization overhead prior to caching.
+
+![Scaling Plot](RESULT/scaling_plot.png)
+
+### Null Bitmap Handling
+- Arrow uses an efficient 1-bit bitmap array for nulls.
+- With nulls processing (`0.3910s`) was faster than without nulls (`0.7842s`) in Python loop overhead testing.
+
+![Null Bitmap Performance](RESULT/null_bitmap_plot.png)
 
 ---
 

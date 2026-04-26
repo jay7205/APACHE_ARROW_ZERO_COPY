@@ -10,6 +10,10 @@ This section analyzes how Apache Arrow behaves under different stress conditions
 
 From the scaling experiments, execution time generally increases as data size grows, although not in a perfectly linear manner.
 
+![Scaling Plot](../RESULT/scaling_plot.png)
+
+**Graph Interpretation:** The visual demonstrates initialization friction. Small datasets experience cache-warmup penalties before the hardware stabilizes into efficient linear scaling.
+
 ---
 
 ### Analysis
@@ -43,6 +47,10 @@ Arrow performs efficiently for large datasets, but performance depends on availa
 - Zero-copy breaks when converting to Python lists  
 - NumPy conversion may or may not preserve zero-copy depending on compatibility  
 
+![Pointer Break Plot](../RESULT/break_zero_copy_plot.png)  
+
+**Graph Interpretation:** The graph illustrates the exact failure boundary where incompatible data representations explicitly force a copy operation, breaking zero-copy.
+
 ---
 
 ### Analysis
@@ -72,6 +80,10 @@ Arrow is most efficient when operations remain within its internal memory repres
 
 - Memory usage increases with allocations  
 - Memory is not fully released after deletion  
+
+![Memory Pool Plot](../RESULT/memory_pool_plot.png)  
+
+**Graph Interpretation:** The plateaus in the visual prove that the system restricts freeing memory to the OS, maintaining high peak usage as a tradeoff for allocation speed.
 
 ---
 

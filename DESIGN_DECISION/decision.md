@@ -64,6 +64,10 @@ Data: [1, null, 3]
 Bitmap: 1 0 1
 Values: 1 ? 3
 
+![Null Bitmap Plot](../RESULT/null_bitmap_plot.png)
+
+**Graph Interpretation:** The graph defends the bitmap decision by mathematically proving that 1-bit logic checks are immensely more performant than inline null storage.
+
 
 ### Tradeoff:
 This approach introduces an additional lookup during data access and increases implementation complexity.

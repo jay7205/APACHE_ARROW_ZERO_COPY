@@ -8,6 +8,10 @@ This section traces a complete execution path in Apache Arrow, from a user-level
 
 ## Execution Path: Python Input to Memory Storage
 
+![Execution Flow](../DIAGRAMS/execution_flow.png)
+
+**Graph Interpretation:** The architecture diagram traces the entry point from high-level Python `pa.array` downward, bypassing intermediate abstractions directly into the C++ `Buffer` memory construct.
+
 We trace the execution of the following input:
 
 ```python
