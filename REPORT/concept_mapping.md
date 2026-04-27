@@ -12,7 +12,7 @@ Columnar storage organizes data by columns instead of rows. This improves perfor
 
 ![Memory Layout](../DIAGRAMS/memory_layout.png)
 
-**Graph Interpretation:** This layout clearly compares traditional row-based object storage against Arrow's contiguous columnar buffers, visually explaining why columnar cache locality is superior.
+This layout compares traditional row-based object storage against Arrow's contiguous columnar buffers. You can see visually why columnar cache locality is much faster for scans.
 
 ---
 
@@ -30,6 +30,14 @@ Columnar storage organizes data by columns instead of rows. This improves perfor
 - Efficient scanning and vectorized operations  
 - Better cache locality  
 - Reduced unnecessary data access  
+
+### Comparative Analysis: Arrow vs Row-Store
+| Feature | Apache Arrow (Columnar) | PostgreSQL (Row-Store) |
+| --- | --- | --- |
+| **Locality** | Cache-friendly for single column scans | Cache-friendly for whole-record access |
+| **Analytics** | Blistering fast O(1) aggregates | Slower O(N) cache misses |
+| **Updates** | Immutable (expensive to update) | Mutable (fast row updates) |
+| **Zero-Copy** | Yes (pointers to buffers) | No (requires deserialization) |
 
 ---
 
@@ -141,7 +149,7 @@ Zero-copy systems avoid data duplication by sharing memory between components.
 
 ![Conceptual Zero Copy](../DIAGRAMS/zero_copy_vs_copy.png)
 
-**Graph Interpretation:** This traces how two entirely separate Array objects can execute rapid operations by pointing to the exact same physical raw byte buffer.
+This diagram shows how two entirely separate Array objects can run super fast operations by just pointing to the exact same physical byte buffer under the hood.
 
 ---
 

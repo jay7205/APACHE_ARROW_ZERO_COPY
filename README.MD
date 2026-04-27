@@ -129,6 +129,11 @@ Analyzed system limitations:
 
 ---
 
+### System Maturity & Boundaries
+*Zero-copy is not an absolute guarantee within Apache Arrow; operations like cross-language format conversion, specific slicing patterns, or conversion to unsupported system boundaries force hidden, expensive memory duplication.*
+
+---
+
 ## Experimental Results
 
 ### Zero-Copy vs Copy

@@ -7,7 +7,7 @@ sizes = [1_000_000, 5_000_000, 10_000_000, 50_000_000]
 for size in sizes:
     times = []
 
-    for _ in range(3):  # repeat 3 times
+    for _ in range(3):
         data = np.arange(size)
 
         start = time.time()

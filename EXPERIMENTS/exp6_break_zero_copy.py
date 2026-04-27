@@ -3,11 +3,9 @@ import numpy as np
 
 print("=== Zero-Copy vs Break Zero-Copy ===")
 
-# Create data
 data = np.arange(10_000_000)
 arr = pa.array(data)
 
-# Case 1: Zero-copy slice
 slice_arr = arr.slice(0, 5_000_000)
 
 print("\n[CASE 1] Slice (Expected: ZERO-COPY)")
@@ -19,7 +17,6 @@ if arr.buffers()[1].address == slice_arr.buffers()[1].address:
 else:
     print("Result: Copy occurred")
 
-# Case 2: Convert to Python list (FORCES COPY)
 print("\n[CASE 2] Convert to Python list (Expected: COPY)")
 
 py_list = arr.to_pylist()
@@ -33,7 +30,6 @@ if arr.buffers()[1].address == new_arr.buffers()[1].address:
 else:
     print("Result: Copy occurred (zero-copy broken)")
 
-# Case 3: Convert to NumPy and back
 print("\n[CASE 3] NumPy round-trip (Expected: COPY)")
 
 np_array = arr.to_numpy()

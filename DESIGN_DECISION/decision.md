@@ -66,7 +66,7 @@ Values: 1 ? 3
 
 ![Null Bitmap Plot](../RESULT/null_bitmap_plot.png)
 
-**Graph Interpretation:** The graph defends the bitmap decision by mathematically proving that 1-bit logic checks are immensely more performant than inline null storage.
+The graph defends this bitmap decision by proving that 1-bit logic checks are actually way more performant than inline null storage.
 
 
 ### Tradeoff:

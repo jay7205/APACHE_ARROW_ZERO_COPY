@@ -1,11 +1,8 @@
 import pyarrow as pa
 import time
 
-# Pre-generate data once
 data_no_null = list(range(10_000_000))
 data_with_null = [i if i % 10 != 0 else None for i in data_no_null]
-
-# Measure only Arrow conversion
 
 start = time.time()
 arr1 = pa.array(data_no_null)

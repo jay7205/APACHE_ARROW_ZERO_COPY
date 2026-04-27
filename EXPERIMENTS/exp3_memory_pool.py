@@ -5,7 +5,6 @@ pool = pa.default_memory_pool()
 
 print("Initial memory:", pool.bytes_allocated())
 
-# Force Arrow to allocate (use Python list, not NumPy)
 data = list(range(10_000_000))
 
 arr1 = pa.array(data)

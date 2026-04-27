@@ -10,7 +10,7 @@ This section traces a complete execution path in Apache Arrow, from a user-level
 
 ![Execution Flow](../DIAGRAMS/execution_flow.png)
 
-**Graph Interpretation:** The architecture diagram traces the entry point from high-level Python `pa.array` downward, bypassing intermediate abstractions directly into the C++ `Buffer` memory construct.
+This architectural diagram traces the entry point from the high-level Python `pa.array` call downwards, skipping intermediate abstractions directly into the C++ `Buffer` memory struct.
 
 We trace the execution of the following input:
 
@@ -92,3 +92,13 @@ pa.array()
 → ToChunkedArray
 → ArrayData
 → Buffer (memory)
+
+---
+
+## Execution Path: Memory Read to Python Output
+
+Just as data is ingested into memory, it must be read back out. Here is the query trace of retrieving an element (`val = arr[0]`):
+
+1. **Python Access:** `array.pxi` -> `__getitem__` is triggered natively.
+2. **C++ Query:** Arrow fires `GetScalar`, which bypasses arrays checking length bounds and fetches the target `ArrayData` struct.
+3. **Memory Access:** Dereferences the low-level `Buffer[1]` pointer to return the raw byte directly back into Python context.

@@ -12,7 +12,7 @@ From the scaling experiments, execution time generally increases as data size gr
 
 ![Scaling Plot](../RESULT/scaling_plot.png)
 
-**Graph Interpretation:** The visual demonstrates initialization friction. Small datasets experience cache-warmup penalties before the hardware stabilizes into efficient linear scaling.
+As seen in the plot, there is serious initialization friction upfront. Small datasets take a cache-warmup penalty before the hardware stabilizes into efficient, predictable linear scaling.
 
 ---
 
@@ -49,7 +49,7 @@ Arrow performs efficiently for large datasets, but performance depends on availa
 
 ![Pointer Break Plot](../RESULT/break_zero_copy_plot.png)  
 
-**Graph Interpretation:** The graph illustrates the exact failure boundary where incompatible data representations explicitly force a copy operation, breaking zero-copy.
+The plot illustrates the exact failure boundary where incompatible data types force a hard copy operation, which totally breaks the zero-copy promise.
 
 ---
 
@@ -83,7 +83,7 @@ Arrow is most efficient when operations remain within its internal memory repres
 
 ![Memory Pool Plot](../RESULT/memory_pool_plot.png)  
 
-**Graph Interpretation:** The plateaus in the visual prove that the system restricts freeing memory to the OS, maintaining high peak usage as a tradeoff for allocation speed.
+The plateaus in this graph prove that the Arrow pool restricts freeing memory back to the OS. It maintains a high peak RAM usage as a tradeoff for faster reallocation speed later.
 
 ---
 
