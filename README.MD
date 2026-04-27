@@ -1,185 +1,87 @@
 # Apache Arrow — Zero-Copy System Analysis
 
-## Overview
-
-This project presents a system-level analysis of Apache Arrow, focusing on its zero-copy architecture. The goal is not to use the system as a tool, but to understand how it works internally by analyzing its codebase, tracing execution flow, and validating behavior through experiments.
-
-The project follows a reverse-engineering approach, connecting code, system design, and real-world performance.
+## What is this?
+This is our end-semester systems engineering project. Instead of just using Apache Arrow as an analytics tool, we completely tore it apart. We reverse-engineered the C++ codebase, traced exactly how data moves into memory, and ran heavy Python experiments to prove how its zero-copy architecture actually works under the hood.
 
 ---
 
-## Objective
-
-This project aims to answer:
-
-- What problem does Apache Arrow solve?
-- How does zero-copy improve performance?
-- What design decisions enable this behavior?
-- What tradeoffs do these decisions introduce?
-- How does the system behave under real-world conditions?
+## What we wanted to figure out
+- What exact problem does Apache Arrow solve?
+- Is "zero-copy" actually real, and how much faster is it?
+- What compromises did the developers make to get this speed?
+- Where does the system eventually break or fail?
 
 ---
 
-## Project Approach
+## How we broke it down
 
-The work was carried out in structured phases:
-
-### Phase 1 — Execution Understanding
+### Phase 1 — Tracking the Code
 ![Execution Flow](DIAGRAMS/execution_flow.png)
+We tracked the exact path data takes from the top-level Python API straight down into raw C++ memory blocks (`array.pxi` -> `ConvertPySequence` -> `Buffer`).
 
-- Traced the execution path from Python API to memory
-- Identified transition from Python layer to C++ layer
-- Analyzed key components:
-  - `array.pxi`
-  - `ConvertPySequence`
-  - `converter->Extend`
-  - `ArrayData`
-  - `Buffer`
-
----
-
-### Phase 2 — Memory & Data Structures
+### Phase 2 — Memory Design 
 ![Memory Layout](DIAGRAMS/memory_layout.png)
+We mapped out how Arrow stores data. Everything is packed into contiguous columnar buffers. Because arrays act as "views", multiple objects can point to the exact same buffer without copying anything.
 
-- Studied how Arrow stores data in memory
-- Key components:
-  - Buffer → raw contiguous memory
-  - ArrayData → metadata + buffers
-- Identified how zero-copy is enabled through shared buffers
-
----
-
-### Phase 3 — Design Decisions
-
-Analyzed key architectural decisions:
-
+### Phase 3 — The Big Design Choices
+We dug into the code and looked at 4 massive decisions the Arrow team made:
 1. Columnar memory layout  
-2. Buffer abstraction  
-3. Null bitmap handling  
-4. Memory pool allocation  
+2. Buffer abstractions  
+3. Using bitmaps for nulls  
+4. The custom Memory Pool  
 
-Each decision was evaluated based on:
-- Code location  
-- Purpose  
-- Tradeoffs  
+### Phase 4 & 5 — Stress Testing & Breaking It
+We wrote 6 Python scripts to hammer the system. We tracked the actual physical memory addresses to prove zero-copy works, tracked the memory pool limits, and intentionally forced the system to fail and copy data.
 
 ---
 
-### Phase 4 — Experiments
+## Key Takeaways
 
-Conducted experiments to validate system behavior:
-
-- Zero-copy vs copy performance  
-- Buffer memory sharing  
-- Memory pool behavior  
-- Null bitmap impact  
-- Large-scale behavior  
-- Breaking zero-copy conditions  
-
----
-
-### Phase 5 — Failure Analysis
-
-Analyzed system limitations:
-
-- Behavior under increasing data size  
-- Conditions where zero-copy fails  
-- Memory management tradeoffs  
-- System assumptions  
-
----
-
-## Key Findings
-
-### Zero-Copy Behavior
+### Zero-Copy is insane
 ![Conceptual Zero Copy](DIAGRAMS/zero_copy_vs_copy.png)
+- Slicing data takes constant time (O(1)). Duplicating it scales terribly (O(n)). 
+- The speed doesn't come from faster math; it comes from just never moving the data in the first place.
 
-- Zero-copy operations run in constant time (O(1))
-- Copy operations scale linearly (O(n))
-- Performance gain comes from avoiding memory duplication
+### But it has hard limits
+*Zero-copy is not magic. If you try to convert Arrow data into a native Python list or pass it to an unsupported system, the architecture breaks and it is forced to do an expensive deep-copy.*
 
----
-
-### Memory Design
-- Data stored in contiguous buffers
-- Arrays act as views over memory
-- Multiple arrays can share the same buffer
+### Memory Pooling hoards RAM
+Arrow doesn't give memory back to the OS right away. It hoards it in a pool so it can quickly reuse it later, trading higher RAM usage for much faster allocation speeds.
 
 ---
 
-### System Boundaries
-- Zero-copy works only within compatible memory formats
-- Conversion to Python objects breaks zero-copy
-- NumPy may preserve zero-copy depending on layout
-
----
-
-### Memory Pool
-- Memory is reused instead of freed immediately
-- Improves performance but increases memory usage
-
----
-
-### Real-World Behavior
-- Performance influenced by:
-  - CPU caching  
-  - memory reuse  
-  - runtime optimizations  
-- Results are not always strictly linear  
-
----
-
-### System Maturity & Boundaries
-*Zero-copy is not an absolute guarantee within Apache Arrow; operations like cross-language format conversion, specific slicing patterns, or conversion to unsupported system boundaries force hidden, expensive memory duplication.*
-
----
-
-## Experimental Results
+## The Hard Data from our Experiments
 
 ### Zero-Copy vs Copy
-- Zero-copy time remains constant (**0.0002 seconds**)
-- Copy time increases linearly with data size (**3.6057 seconds**)
+- Zero-copy time: **0.0002 seconds** (Flatline)
+- Copy time: **3.6057 seconds** (Linear climb)
 
 ![Zero Copy vs Copy Comparison](RESULT/zero_copy_vs_copy_plot.png)
 
-### Memory Pool
-- Memory usage increases with allocation (`arr1` = 80MB, `arr2` = 160MB).  
-- Memory is managed by the Arrow memory pool and reused upon deletion instead of being immediately returned to the OS.
+### The Memory Pool
+- Memory scales up quickly (`arr1` = 80MB, `arr2` = 160MB).  
+- But when we deleted the data in Python, Arrow kept the 80MB locked in the pool instead of freeing it.
 
 ![Memory Pool Behavior](RESULT/memory_pool_plot.png)
 
-### Breaking Zero-Copy
-Through memory address validation, we observed:
-- Slice remains zero-copy (Same buffer: `2326838259776`)
-- Conversion to Python `list` forces copy (Different buffer: `2327277666432`)
-- NumPy round-trip maintains zero-copy (Same buffer: `2326838259776`)
+### Breaking the System
+We tracked the exact memory pointers:
+- Slicing kept the same pointer (`2326838259776`).
+- Converting to a standard Python `list` gave us a totally different pointer (`2327277666432`). It broke zero-copy!
 
 ![Breaking Zero Copy](RESULT/break_zero_copy_plot.png)
 
-### Scaling
-- Performance linear trends test (5M: `0.0008s` → 10M: `0.0018s` → 50M: `0.0073s`).
-- The 1M test (`0.0764s`) reveals CPU/cache initialization overhead prior to caching.
+### Scale Testing (1M to 50M records)
+- The execution times mostly scale linearly (5M: `0.0008s` → 10M: `0.0018s` → 50M: `0.0073s`).
+- However, the 1M test actually took longer (`0.0764s`) because the CPU cache had to warm up first!
 
 ![Scaling Plot](RESULT/scaling_plot.png)
 
-### Null Bitmap Handling
-- Arrow uses an efficient 1-bit bitmap array for nulls.
-- With nulls processing (`0.3910s`) was faster than without nulls (`0.7842s`) in Python loop overhead testing.
+### The Null Bitmap Trick
+- We processed an array with Nulls (`0.3910s`) and an array without Nulls (`0.7842s`).
+- Because Arrow uses a highly optimized 1-bit logic checker, handling nulls was actually *faster*.
 
 ![Null Bitmap Performance](RESULT/null_bitmap_plot.png)
-
----
-
-## System Diagrams
-
-The following diagrams were generated programmatically:
-
-- Execution Flow — API to memory pipeline  
-- Memory Layout — ArrayData and buffers  
-- Zero-Copy vs Copy — memory behavior  
-
-Location:  
-`DIAGRAMS/`
 
 ---
 
@@ -189,13 +91,11 @@ Location:
 .
 ├── DESIGN_DECISION/
 │   └── decision.md
-│
 ├── DIAGRAMS/
 │   ├── execution_flow.png
 │   ├── generate diagrams.py
 │   ├── memory_layout.png
 │   └── zero_copy_vs_copy.png
-│
 ├── EXPERIMENTS/
 │   ├── exp1_zero_copy_vs_copy.py
 │   ├── exp2_buffer_memory_check.py
@@ -203,16 +103,12 @@ Location:
 │   ├── exp4_null_bitmap.py
 │   ├── exp5_scale_test.py
 │   └── exp6_break_zero_copy.py
-│
 ├── MODIFIED_ARROW/
-│
 ├── PRESENTATION/
-│
 ├── REPORT/
 │   ├── concept_mapping.md
 │   ├── execution_understanding.md
 │   └── failure_analysis.md
-│
 ├── RESULT/
 │   ├── break_zero_copy_plot.png
 │   ├── genarate_plot_experiments.py
@@ -221,32 +117,10 @@ Location:
 │   ├── observations.md
 │   ├── scaling_plot.png
 │   └── zero_copy_vs_copy_plot.png
-│
 └── README.md
 ```
 
-## Technologies Used
-Python (PyArrow, NumPy)
-C++ (code analysis)
-Matplotlib (visualization)
-Apache Arrow source code
-Key Insight
-
-Apache Arrow achieves high performance not by faster computation, but by minimizing data movement in memory.
-
-## Conclusion
-
-This project demonstrates system-level understanding of Apache Arrow by:
-
-tracing execution paths
-analyzing internal data structures
-validating behavior through experiments
-identifying limitations and tradeoffs
-
-The results highlight the importance of memory design in modern data systems.
-
-## Author
-
+## Authors
 Jay Patel — 202518025
 Saachi Garg — 202518007
 
