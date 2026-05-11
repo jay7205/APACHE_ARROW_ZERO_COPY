@@ -3,6 +3,18 @@
 ## What is this?
 This is our end-semester systems engineering project. Instead of just using Apache Arrow as an analytics tool, we completely tore it apart. We reverse-engineered the C++ codebase, traced exactly how data moves into memory, and ran heavy Python experiments to prove how its zero-copy architecture actually works under the hood.
 
+## Source-Level Apache Arrow Modifications
+
+Forked Apache Arrow Repository (with native C++ source modifications):
+
+https://github.com/jay7205/arrow_forked/tree/modifications
+
+This branch contains:
+- execution tracing injection
+- memory allocation failure injection
+- forced deep-copy architectural modification
+- incremental commit history showing all system-level interventions
+
 ---
 
 ## What we wanted to figure out
@@ -32,6 +44,84 @@ We dug into the code and looked at 4 massive decisions the Arrow team made:
 
 ### Phase 4 & 5 — Stress Testing & Breaking It
 We wrote 6 Python scripts to hammer the system. We tracked the actual physical memory addresses to prove zero-copy works, tracked the memory pool limits, and intentionally forced the system to fail and copy data.
+
+# Native C++ Source-Level Modifications
+
+Beyond Python-level benchmarking, we directly modified and recompiled the Apache Arrow C++ source code to validate its architectural behavior from inside the execution pipeline itself.
+
+This transformed the project from a black-box performance study into a white-box systems engineering analysis.
+
+---
+
+## Modification 1 — Zero-Copy Slice Execution Tracing
+
+### Target File
+`cpp/src/arrow/buffer.cc`
+
+### Objective
+To trace when Arrow internally performs zero-copy slicing.
+
+### Modification
+We injected runtime logging inside `SliceBufferSafe()` to expose:
+- original memory address
+- slice offsets
+- zero-copy execution activation
+
+### Architectural Insight
+This confirmed that Arrow slicing does not duplicate memory. Instead, it creates lightweight metadata views pointing to the same underlying memory block.
+
+### Systems Impact
+- Constant-time slicing (`O(1)`)
+- No physical data movement
+- Shared-memory semantics
+
+---
+
+## Modification 2 — Artificial Memory Allocation Cap
+
+### Target File
+`cpp/src/arrow/memory_pool.cc`
+
+### Objective
+To simulate constrained-memory environments and study Arrow's allocator behavior under failure conditions.
+
+### Modification
+We injected a hard 50MB allocation threshold directly into the Arrow memory pool implementation.
+
+### Architectural Insight
+This exposed how Arrow handles allocation failures gracefully through its centralized memory management system.
+
+### Systems Impact
+- Controlled failure injection
+- Memory-bound stress testing
+- Allocation path analysis
+
+---
+
+## Modification 3 — Disabling Zero-Copy (Forced Deep Copy)
+
+### Target File
+`cpp/src/arrow/buffer.cc`
+
+### Objective
+To intentionally destroy Arrow's zero-copy optimization and measure the architectural consequences.
+
+### Modification
+We replaced lightweight shared-memory slicing with explicit deep-copy behavior using `CopySlice()` and `memcpy()`.
+
+### Architectural Insight
+This transformed slicing complexity from:
+- `O(1)` metadata view creation
+to:
+- `O(n)` memory duplication
+
+### Systems Impact
+- Significant performance degradation
+- Increased memory allocation pressure
+- Demonstrated why Arrow’s zero-copy design is critical at scale
+
+
+
 
 ---
 
@@ -119,6 +209,31 @@ We tracked the exact memory pointers:
 │   └── zero_copy_vs_copy_plot.png
 └── README.md
 ```
+
+# Final Conclusion
+
+Apache Arrow achieves its performance not because it performs computation faster, but because it aggressively minimizes physical data movement.
+
+The project demonstrated that:
+- zero-copy semantics fundamentally reduce computational overhead,
+- memory layout decisions dominate large-scale analytics performance,
+- allocator design strongly impacts scalability and fault behavior,
+- and modern analytical systems increasingly optimize around memory architecture rather than raw CPU speed alone.
+
+By directly modifying and recompiling the Arrow C++ source code, we validated that even small architectural changes can drastically alter system-level performance behavior.
+
+This project ultimately evolved from a Python benchmarking exercise into a complete systems-level investigation of modern in-memory analytics architecture.
+
+# Technology Stack
+
+- Apache Arrow (C++)
+- PyArrow
+- Python
+- NumPy
+- Matplotlib
+- Visual Studio 2026
+- CMake
+- Git & GitHub
 
 ## Authors
 Jay Patel — 202518025
